@@ -9,12 +9,17 @@ This module provides a set of functions build on top of [`tweepy`](https://githu
 
 Create an app using your Twitter account and store the following variables in the `source.sh` template file, which you'll use to export your keys and tokens as environment variables. 
 
-`$ export CONSUMER_KEY='YOUR CONSUMER_KEY HERE'
-$ export CONSUMER_SECRET='YOUR CONSUMER_KEY HERE'
-$ export ACCESS_TOKEN='YOUR ACCESS_TOKEN HERE'
-$ export ACCESS_TOKEN_SECRET='YOUR ACCESS_TOKEN_SECRET HERE'
-$ export OWNER='YOUR OWNDER NAME HERE'
-$ export OWNER_ID='YOUR OWNER_ID HERE'`
+`$ export CONSUMER_KEY='YOUR CONSUMER_KEY HERE'`
+
+`$ export CONSUMER_SECRET='YOUR CONSUMER_KEY HERE'`
+
+`$ export ACCESS_TOKEN='YOUR ACCESS_TOKEN HERE'`
+
+`$ export ACCESS_TOKEN_SECRET='YOUR ACCESS_TOKEN_SECRET HERE'`
+
+`$ export OWNER='YOUR OWNDER NAME HERE'`
+
+`$ export OWNER_ID='YOUR OWNER_ID HERE'`
 
 In your terminal, run the following command:
 
