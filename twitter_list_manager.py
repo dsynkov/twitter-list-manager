@@ -167,6 +167,26 @@ class TwitterListManager:
             
         return list_df
 
+    def members_have_ids(self,source_of_members):
+        
+        all_are_ids = all(isinstance(member,int) for member in source_of_members)
+        
+        return all_are_ids
+
+    def get_ids_from_names(self,source_of_members):
+        
+        all_are_ids = self.members_have_ids(source_of_members)
+        
+        if not all_are_ids:
+            member_ids = []
+            for member in source_of_members:
+                user = API.get_user(member)
+                member_ids.append(user.id)
+        else:
+            member_ids = source_of_members
+        
+        return member_ids
+        
     def create_list(self,name,members):
 
         # To do: add error handling
@@ -176,19 +196,8 @@ class TwitterListManager:
             members = members_file.read().splitlines()
             
         if isinstance(members,list):
-            # Check if list items are int or str
-            # To do: turn this into a function
-            check_first_member = isinstance(members[0],str)
-            
-            # If str then retrieve the user ids
-            # To do: turn this into a function
-            if check_first_member:
-                member_ids = []
-                for member in members:
-                    user = API.get_user(member)
-                    member_ids.append(user.id)
-            else:
-                member_ids = members
+            # Get ids if list items are str
+            member_ids = self.get_ids_from_names(members)
             
             # Create the actual list; get slug
             new_list = API.create_list(name)
