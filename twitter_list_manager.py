@@ -16,7 +16,6 @@ auth_dict = {
 }
 
 path_error_msg = "The argument 'members = ' must contain either a list object or an absolute path to a file containing list of members."
-    
 class TwitterListManager:
     
     def __init__(self):
@@ -30,16 +29,23 @@ class TwitterListManager:
         global API
         
         API = tweepy.API(auth)
+        
+    def get_timestamp(self):
+        
+        current_time = time.time()
+        current_timestamp = datetime.fromtimestamp(
+            current_time).strftime('%Y-%m-%d %H:%M:%S')
+        
+        return current_timestamp
     
     def post_tweet(self,text):
 
         API.update_status(status=text)
         
-        current_time = time.time()
-        current_time_stamp = datetime.fromtimestamp(
-            current_time).strftime('%Y-%m-%d %H:%M:%S')
+        ts = self.get_timestamp()
             
-        print("Success! Your tweet '{}' was posted on {}.".format(text,current_time_stamp))
+        print("Success! Your tweet '{}' was posted on {}.".format(
+            text,ts))
 
     def get_list_members(self,owner,slug,attr='screen_name'):
     
@@ -231,13 +237,11 @@ class TwitterListManager:
                 
         else:
             raise TypeError(path_error_msg)
-
-        current_time = time.time()
-        current_time_stamp = datetime.fromtimestamp(
-            current_time).strftime('%Y-%m-%d %H:%M:%S')
-              
-        # print("List '{}' created on {} with {} members.".format(
-        #    name,current_time_stamp,len(member_ids)))
+        
+        ts = self.get_timestamp()
+        
+        print("List '{}' created on {} with {} members.".format(
+           name,ts,len(member_ids)))
 
     def copy_list(self,owner,slug):
     
@@ -255,12 +259,10 @@ class TwitterListManager:
         # Create copy using same name
         self.create_list(list_name,list_to_copy)
         
-        current_time = time.time()
-        current_time_stamp = datetime.fromtimestamp(
-            current_time).strftime('%Y-%m-%d %H:%M:%S')
+        ts = self.get_timestamp()
         
         print("List '{}' with slug '{}' copied from @{} on {}.".format(
-            list_name,slug,owner,current_time_stamp))
+            list_name,slug,owner,ts))
 
     def delete_all_lists(self):
     
