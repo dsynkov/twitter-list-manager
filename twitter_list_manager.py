@@ -16,6 +16,7 @@ auth_dict = {
 }
 
 path_error_msg = "The argument 'members = ' must contain either a list object or an absolute path to a file containing list of members."
+
 class TwitterListManager:
     
     def __init__(self):
@@ -218,9 +219,20 @@ class TwitterListManager:
         # To do: add error handling
         # for non-existent handles/ids
         if os.path.isabs(str(members)):
-            members_file = open(members,'r')
-            members = members_file.read().splitlines()
             
+            filename, file_ext = os.path.splitext(members)
+            
+            # In case members are in Excel file...
+            if file_ext == '.xlsx' or file_ext == '.xls':
+                # Read in first df col & convert to list
+                df = pd.read_excel(members,cols='A',header=None)
+                members = df.iloc[:,0].tolist()
+            else:
+                # Use this to read in .csv or .txt
+                members_file = open(members,'r')
+                members = members_file.read().splitlines()
+                members_file.close()
+                
         if isinstance(members,list):
             # Get ids if list items are str
             member_ids = self.get_ids_from_names(members)
@@ -233,15 +245,15 @@ class TwitterListManager:
                 API.add_list_member(user_id = member_id, slug= new_slug, 
                                     owner_screen_name = self.OWNER)
                 
-                time.sleep(2)
+                time.sleep(.2)
                 
         else:
             raise TypeError(path_error_msg)
         
         ts = self.get_timestamp()
         
-        print("List '{}' created on {} with {} members.".format(
-           name,ts,len(member_ids)))
+        # print("List '{}' created on {} with {} members.".format(
+        #   name,ts,len(member_ids)))
 
     def copy_list(self,owner,slug):
     

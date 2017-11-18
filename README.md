@@ -1,7 +1,7 @@
 
 # Twitter List Manager
 
-This module provides a set of functions build on top of [`tweepy`](https://github.com/tweepy/tweepy) for users to scrape, analyze, export, and copy publically available list on Twitter - or alternatively, create and manage their own. It may be useful for those looking to get lists in or out of Twitter quickly in bulk for use in other kinds of analayses (digitial analytics or social listening) without necessarily requiring the larger extent of `tweepy`'s capabilities. More updates and features to come. 
+This module provides a set of functions build on top of [`tweepy`](https://github.com/tweepy/tweepy) for users to scrape, analyze, export, and copy publically available list on Twitter -- or alternatively, create and manage their own. It may be useful for those looking to get lists in or out of Twitter quickly in bulk for use in other kinds of analysis (digitial analytics or social listening) without necessarily requiring the larger extent of `tweepy`'s capabilities. More updates and features to come. 
 
 ## Getting Authenticated
 
@@ -38,7 +38,7 @@ import os
 print(os.environ.get('CONSUMER KEY'))
 ```
 
-***(For Windows user, look up how to replicate the above steps using `setx` instead of `export` and a `.bat` instead of a `.sh` file. Or, just get the Bash emulator that comes with the installation of [Git for Windows](https://git-for-windows.github.io/).)***
+***(For Windows users, look up how to replicate the above steps using `setx` instead of `export` and a `.bat` instead of a `.sh` file. Or, just get the Bash emulator that comes with the installation of [Git for Windows](https://git-for-windows.github.io/).)***
 
 Once your keys are squared away, you should be able to authenticate immediately after creating an instance of the `TwitterListManager()` class:
 
@@ -53,15 +53,15 @@ Now, post a tweet to verify authentication:
 
 
 ```python
-t.post_tweet("Let's check out what we can do with Twitter lists!")
+t.post_tweet("Lets check out what we can do with Twitter lists!")
 ```
 
-    Success! You tweeted 'Let's check out what we can do with Twitter lists!' on 2017-11-04 01:26:56.
+    Success! Your tweet 'Lets check out what we can do with Twitter lists!' was posted on 2017-11-17 22:12:01.
     
 
 ## Working With Public Lists
 
-To get extract the list members from a publically available Twitter list, use the `.get_list_members()` method with the two required parameters of `owner` (the list owner's handle, sans '@', in quotes) and the list `slug`, also in quotes. We'll use appropriately titled *Foreign Policy's* [Twitterati 100](https://twitter.com/foreignpolicy/lists/twitterati-100?lang=en). 
+To get the list members from a publically available Twitter list, use the `.get_list_members()` method with the two required parameters of `owner` (the list owner's handle, sans '@', in quotes) and the list `slug`, also in quotes. We'll use the appropriately titled *Foreign Policy's* [Twitterati 100](https://twitter.com/foreignpolicy/lists/twitterati-100?lang=en). 
 
 You should be able to find the slug in the tail-end portion of the URL, right before `lang` if `lang` is present. So, for a URL of `https://twitter.com/foreignpolicy/lists/twitterati-100?lang=en` the slug would be `twitterati-100`. This will return a `list` type object of user screen names.
 
@@ -100,7 +100,7 @@ t.get_owner_list_data('foreignpolicy',export=True)
 
 ## Working With Your Own Lists
 
-This next set of fucntions are parallel to the above, only you don't need to specy the `owner` parameter, since the owner is you (assuming you exported `OWNER` as an environment variable):
+This next set of functions are parallel to the above, only you don't need to specify the `owner` parameter, since the owner is you (assuming you exported `OWNER` as an environment variable):
 
 
 ```python
@@ -115,15 +115,15 @@ t.get_my_list_data(export=True) # Returns a dataframe of your list data
 To create a list, you need to pass a name and either:
 
 1. A Python list of screen names or Twitter ids you want added.
-2. A text file of screen names or Twitter ids you want added.
+2. A file of screen names or Twitter ids you want added.
 
-Note that if you're sourcing from a text file, the items must be in a single column, with no '@'s or commas.
+Note that if you're sourcing from your own file, `.csv,.txt,.xls`, and `.xlsx` are all supported, insofar as you are passing in an absolute path. The function will read in the first column of your file. Do not include headers.
 
 **For *both* cases (1) & (2) above, the source has must be *all* screen names or *all* Twitter IDs.**
 
 See the text files in the `examples` sub-directory of this repository for both cases.
 
-Say we saved the *Foreign Policy* list from earlir into a list object and want to create a list from it outselves:
+Say we saved the *Foreign Policy* list from earlier into a list object and want to create a list from it outselves:
 
 
 ```python
@@ -137,7 +137,7 @@ We can then pass it to the `.create_list()` method, preceded by a name.
 t.create_list('Twitterati Copy List',twitterati)
 ```
 
-Alternatively, we can source our list from a text file, using `list_as_text_file_ids.txt` as an example. Make sure you include an *absolute* (rather than a relative) filepath.
+Alternatively, we can source our list from a file, using `list_as_text_file_ids.txt` as an example. Make sure you include an *absolute* (rather than a relative) filepath.
 
 
 ```python
