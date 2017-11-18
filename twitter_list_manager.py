@@ -16,26 +16,19 @@ auth_dict = {
 }
 
 path_error_msg = "The argument 'members = ' must contain either a list object or an absolute path to a file containing list of members."
-
+    
 class TwitterListManager:
     
     def __init__(self):
         
-        auth = tweepy.OAuthHandler(
-            auth_dict['CONSUMER_KEY'],
-            auth_dict['CONSUMER_SECRET'])
-            
-        auth.set_access_token(
-            auth_dict['ACCESS_TOKEN'],
-            auth_dict['ACCESS_TOKEN_SECRET'])
+        auth = tweepy.OAuthHandler(auth_dict['CONSUMER_KEY'],auth_dict['CONSUMER_SECRET'])
+        auth.set_access_token(auth_dict['ACCESS_TOKEN'],auth_dict['ACCESS_TOKEN_SECRET'])
         
-        global OWNER 
-        OWNER = auth_dict['OWNER']
-        
-        global OWNER_ID 
-        OWNER_ID = auth_dict['OWNER_ID']
+        self.OWNER = auth_dict['OWNER']
+        self.OWNER_ID = auth_dict['OWNER_ID']
         
         global API
+        
         API = tweepy.API(auth)
     
     def post_tweet(self,text):
@@ -46,7 +39,7 @@ class TwitterListManager:
         current_time_stamp = datetime.fromtimestamp(
             current_time).strftime('%Y-%m-%d %H:%M:%S')
             
-        print("Success! You tweeted '{}' on {}.".format(text,current_time_stamp))
+        print("Success! Your tweet '{}' was posted on {}.".format(text,current_time_stamp))
 
     def get_list_members(self,owner,slug,attr='screen_name'):
     
@@ -57,14 +50,14 @@ class TwitterListManager:
                 output_list.append(member.id)
             else:
                 output_list.append(member.screen_name)
+                
+        # print("Success! All {} member {}s have been collected from @{}'s list '{}'.".format(
+        #    len(output_list),attr,owner,slug))
         
         return output_list
 
     def get_list_member_data(self,owner,slug,export=False):
-        
-        # Initiate empty df
         member_df = pd.DataFrame()
-        
         for member in tweepy.Cursor(API.list_members,owner,slug).items():
             # Create json string from User object
             member_json_str = json.dumps(member._json)
@@ -72,11 +65,14 @@ class TwitterListManager:
             member_df_row = pd.read_json(member_json_str,lines=True)
             # Append each line into member_df
             member_df = member_df.append(member_df_row)
-            # To do: write output to csv instead of a df
+            # to do: write output to csv instead of a df
         if export:
             filepath = os.getcwd() + '\\exports\\'
             filename = owner + '-' + slug + '-list.csv'
-            member_df.to_csv(filepath + filename, index=False)
+            member_df.to_csv(filepath + filename)
+            
+        print("Success! Data for {}'s list '{}' has been retrived.".format(
+            owner,slug))
             
         return member_df
 
@@ -85,6 +81,10 @@ class TwitterListManager:
         list_names = []
         for item in list_result_set:
             list_names.append(item.name)
+            
+        print("Success! All {} lists have been retrived from {}.".format(
+           len(list_names),owner))
+        
         return list_names
 
     def get_owner_list_data(self,owner,export=False):
@@ -119,20 +119,33 @@ class TwitterListManager:
         if export:
             filepath = os.getcwd() + '\\exports\\'
             filename = owner + '-data.csv'
-            list_df.to_csv(filepath + filename, index=False)
+            list_df.to_csv(filepath + filename)
+            
+        print("Success! Data for all {} of {}'s lists has been retrived.".format(
+            len(list_names),owner))
         
         return list_df
 
     def get_my_lists(self):
-        list_result_set = API.lists_all(OWNER)
+        
+        list_result_set = API.lists_all(self.OWNER)
+        
         list_names = []
+        
         for item in list_result_set:
             list_names.append(item.name)
+        
+        if len(list_names) > 0:
+            print("Success! All {} of your lists have been retrieved.".format(
+                len(list_names)))
             
-        return list_names
+            return list_names
+            
+        print("You have no lists to retrieve...")
 
     def get_my_list_data(self,export=False):
-        list_result_set = API.lists_all(OWNER)
+              
+        list_result_set = API.lists_all(self.OWNER)
         
         # Create fields
         list_names = []
@@ -162,11 +175,18 @@ class TwitterListManager:
         
         if export:
             filepath = os.getcwd() + '\\exports\\'
-            filename = OWNER + '-list-data.csv'
-            list_df.to_csv(filepath + filename, index=False)
+            filename = self.OWNER + '-list-data.csv'
+            list_df.to_csv(filepath + filename)
+        
+        if not list_df.empty:
+        
+            print("Success! Data for all {} of your lists has been retrieved.".format(
+                len(list_names)))
             
-        return list_df
-
+            return list_df
+        
+        print("You have no list data to retrive...")
+    
     def members_have_ids(self,source_of_members):
         
         all_are_ids = all(isinstance(member,int) for member in source_of_members)
@@ -205,9 +225,19 @@ class TwitterListManager:
             
             for member_id in member_ids:
                 API.add_list_member(user_id = member_id, slug= new_slug, 
-                                    owner_screen_name = OWNER)
+                                    owner_screen_name = self.OWNER)
+                
+                time.sleep(2)
+                
         else:
             raise TypeError(path_error_msg)
+
+        current_time = time.time()
+        current_time_stamp = datetime.fromtimestamp(
+            current_time).strftime('%Y-%m-%d %H:%M:%S')
+              
+        # print("List '{}' created on {} with {} members.".format(
+        #    name,current_time_stamp,len(member_ids)))
 
     def copy_list(self,owner,slug):
     
@@ -234,16 +264,17 @@ class TwitterListManager:
 
     def delete_all_lists(self):
     
-        list_result_set = API.lists_all(OWNER)
+        list_result_set = API.lists_all(self.OWNER)
         list_slugs = []
         
         if len(list_result_set) > 0:
             for item in list_result_set:
                 list_slugs.append(item.slug)
             for slug in list_slugs:
-                API.destroy_list(owner_screen_name=OWNER,slug=slug)
+                API.destroy_list(owner_screen_name=self.OWNER,slug=slug)
                 
             print("All {} of your lists have been deleted.".format(len(list_slugs)))
             
         else:
+              
             print("You don't have any lists to delete.")
