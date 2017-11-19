@@ -65,6 +65,8 @@ To get the list members from a publically available Twitter list, use the `.get_
 
 You should be able to find the slug in the tail-end portion of the URL, right before `lang` if `lang` is present. So, for a URL of `https://twitter.com/foreignpolicy/lists/twitterati-100?lang=en` the slug would be `twitterati-100`. This will return a `list` type object of user screen names.
 
+Note that this will automatically export a `.csv` of list members. (If you don't want to export, add in `export=False`).
+
 
 ```python
 t.get_list_members('foreignpolicy','twitterati-100')

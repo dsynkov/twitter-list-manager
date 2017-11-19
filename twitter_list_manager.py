@@ -48,7 +48,7 @@ class TwitterListManager:
         print("Success! Your tweet '{}' was posted on {}.".format(
             text,ts))
 
-    def get_list_members(self,owner,slug,attr='screen_name'):
+    def get_list_members(self,owner,slug,attr='screen_name',export=True):
     
         output_list = []
         
@@ -57,6 +57,13 @@ class TwitterListManager:
                 output_list.append(member.id)
             else:
                 output_list.append(member.screen_name)
+                
+        if export:
+            filename = os.getcwd() + '\\exports\\' + slug + '-list-members.csv'
+            with open(filename, 'w', newline='') as csvfile:
+                wr = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+                for item in output_list:
+                    wr.writerow([item])
                 
         # print("Success! All {} member {}s have been collected from @{}'s list '{}'.".format(
         #    len(output_list),attr,owner,slug))
@@ -292,3 +299,5 @@ class TwitterListManager:
         else:
               
             print("You don't have any lists to delete.")
+
+t = TwitterListManager()
