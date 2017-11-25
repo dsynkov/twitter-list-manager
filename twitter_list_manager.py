@@ -297,5 +297,3 @@ class TwitterListManager:
         else:
               
             print("You don't have any lists to delete.")
-
-t = TwitterListManager()
