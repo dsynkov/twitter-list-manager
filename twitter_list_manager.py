@@ -27,9 +27,7 @@ class TwitterListManager:
         self.OWNER = auth_dict['OWNER']
         self.OWNER_ID = auth_dict['OWNER_ID']
         
-        global API
-        
-        API = tweepy.API(auth)
+        self.API = tweepy.API(auth)
         
     def get_timestamp(self):
         
@@ -41,7 +39,7 @@ class TwitterListManager:
     
     def post_tweet(self,text):
 
-        API.update_status(status=text)
+        self.API.update_status(status=text)
         
         ts = self.get_timestamp()
             
@@ -52,7 +50,7 @@ class TwitterListManager:
     
         output_list = []
         
-        for member in tweepy.Cursor(API.list_members,owner,slug).items():
+        for member in tweepy.Cursor(self.API.list_members,owner,slug).items():
             if attr == 'id':
                 output_list.append(member.id)
             else:
@@ -72,7 +70,7 @@ class TwitterListManager:
 
     def get_list_member_data(self,owner,slug,export=False):
         member_df = pd.DataFrame()
-        for member in tweepy.Cursor(API.list_members,owner,slug).items():
+        for member in tweepy.Cursor(self.API.list_members,owner,slug).items():
             # Create json string from User object
             member_json_str = json.dumps(member._json)
             # Read json into line as pandas df
@@ -91,7 +89,7 @@ class TwitterListManager:
         return member_df
 
     def get_owner_lists(self,owner):
-        list_result_set = API.lists_all(owner)
+        list_result_set = self.API.lists_all(owner)
         list_names = []
         for item in list_result_set:
             list_names.append(item.name)
@@ -102,7 +100,7 @@ class TwitterListManager:
         return list_names
 
     def get_owner_list_data(self,owner,export=False):
-        list_result_set = API.lists_all(owner)
+        list_result_set = self.API.lists_all(owner)
         
         # Create fields
         list_names = []
@@ -142,7 +140,7 @@ class TwitterListManager:
 
     def get_my_lists(self):
         
-        list_result_set = API.lists_all(self.OWNER)
+        list_result_set = self.API.lists_all(self.OWNER)
         
         list_names = []
         
@@ -159,7 +157,7 @@ class TwitterListManager:
 
     def get_my_list_data(self,export=False):
               
-        list_result_set = API.lists_all(self.OWNER)
+        list_result_set = self.API.lists_all(self.OWNER)
         
         # Create fields
         list_names = []
@@ -214,7 +212,7 @@ class TwitterListManager:
         if not all_are_ids:
             member_ids = []
             for member in source_of_members:
-                user = API.get_user(member)
+                user = self.API.get_user(member)
                 member_ids.append(user.id)
         else:
             member_ids = source_of_members
@@ -245,11 +243,11 @@ class TwitterListManager:
             member_ids = self.get_ids_from_names(members)
             
             # Create the actual list; get slug
-            new_list = API.create_list(name)
+            new_list = self.API.create_list(name)
             new_slug = new_list.slug
             
             for member_id in member_ids:
-                API.add_list_member(user_id = member_id, slug= new_slug, 
+                self.API.add_list_member(user_id = member_id, slug= new_slug, 
                                     owner_screen_name = self.OWNER)
                 
                 time.sleep(.2)
@@ -267,7 +265,7 @@ class TwitterListManager:
         # To do: error handling for rate limits for large lists
     
         # Get the actual list object
-        list_source = API.get_list(owner_screen_name=owner,slug=slug)
+        list_source = self.API.get_list(owner_screen_name=owner,slug=slug)
         
         # Get the list name to copy 
         list_name = list_source.name
@@ -285,14 +283,14 @@ class TwitterListManager:
 
     def delete_all_lists(self):
     
-        list_result_set = API.lists_all(self.OWNER)
+        list_result_set = self.API.lists_all(self.OWNER)
         list_slugs = []
         
         if len(list_result_set) > 0:
             for item in list_result_set:
                 list_slugs.append(item.slug)
             for slug in list_slugs:
-                API.destroy_list(owner_screen_name=self.OWNER,slug=slug)
+                self.API.destroy_list(owner_screen_name=self.OWNER,slug=slug)
                 
             print("All {} of your lists have been deleted.".format(len(list_slugs)))
             
