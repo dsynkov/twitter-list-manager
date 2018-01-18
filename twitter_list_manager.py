@@ -15,7 +15,7 @@ auth_dict = {
     'OWNER_ID': os.environ.get('OWNER_ID')
 }
 
-path_error_msg = "The argument 'members = ' must contain either a list object or an absolute path to a file containing list of members."
+path_error_msg = "The argument 'members = ' must contain either a list object or an absolute path to a file containing the list of members."
 
 class TwitterListManager:
     
@@ -27,7 +27,8 @@ class TwitterListManager:
         self.OWNER = auth_dict['OWNER']
         self.OWNER_ID = auth_dict['OWNER_ID']
         
-        self.API = tweepy.API(auth)
+        self.API = tweepy.API(auth,
+               wait_on_rate_limit=True)
         
     def get_timestamp(self):
         
@@ -45,6 +46,16 @@ class TwitterListManager:
             
         print("Success! Your tweet '{}' was posted on {}.".format(
             text,ts))
+            
+    def export_list(self,slug,output_list):
+    
+        filename = os.getcwd() + '\\exports\\' + slug + '-list-members.csv'
+        with open(filename, 'w', newline='') as csvfile:
+            wr = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+            for item in output_list:
+                wr.writerow([item])
+                
+        return filename        
 
     def get_list_members(self,owner,slug,attr='screen_name',export=True):
     
@@ -57,14 +68,10 @@ class TwitterListManager:
                 output_list.append(member.screen_name)
                 
         if export:
-            filename = os.getcwd() + '\\exports\\' + slug + '-list-members.csv'
-            with open(filename, 'w', newline='') as csvfile:
-                wr = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-                for item in output_list:
-                    wr.writerow([item])
+            self.export_list(slug,output_list)
                 
-        # print("Success! All {} member {}s have been collected from @{}'s list '{}'.".format(
-        #    len(output_list),attr,owner,slug))
+        print("Success! All {} member {}s have been collected from @{}'s list '{}'.".format(
+            len(output_list),attr,owner,slug)) # To do: hide if used w/i function
         
         return output_list
 
@@ -80,7 +87,7 @@ class TwitterListManager:
             # to do: write output to csv instead of a df
         if export:
             filepath = os.getcwd() + '\\exports\\'
-            filename = owner + '-' + slug + '-list.csv'
+            filename = slug + '-list-data.csv'
             member_df.to_csv(filepath + filename)
             
         print("Success! Data for {}'s list '{}' has been retrived.".format(
@@ -236,6 +243,7 @@ class TwitterListManager:
                 # Use this to read in .csv or .txt
                 members_file = open(members,'r')
                 members = members_file.read().splitlines()
+                members = [member.strip('"') for member in members]
                 members_file.close()
                 
         if isinstance(members,list):
@@ -246,19 +254,31 @@ class TwitterListManager:
             new_list = self.API.create_list(name)
             new_slug = new_list.slug
             
+            # Log members not added
+            members_not_added = []
+            
             for member_id in member_ids:
-                self.API.add_list_member(user_id = member_id, slug= new_slug, 
-                                    owner_screen_name = self.OWNER)
+                try:
+                    self.API.add_list_member(user_id = member_id, slug= new_slug, 
+                                    owner_screen_name = self.OWNER)      
+                except tweepy.TweepError as e:
+                    members_not_added.append(member_id)
+                    
+                    print("Could not add member {}... Resuming after 60 seconds...".format(member_id))
+                    
+                    time.sleep(60)
+
+                    continue
                 
-                time.sleep(.2)
-                
+                time.sleep(1)
+                    
         else:
             raise TypeError(path_error_msg)
         
         ts = self.get_timestamp()
         
-        # print("List '{}' created on {} with {} members.".format(
-        #   name,ts,len(member_ids)))
+        print("List '{}' created on {} with {} members.".format(
+            name,ts,(len(member_ids)-len(members_not_added)))) # To do: hide if used w/i function 
 
     def copy_list(self,owner,slug):
     
@@ -271,7 +291,7 @@ class TwitterListManager:
         list_name = list_source.name
         
         # Get members from the list
-        list_to_copy = self.get_list_members(owner,slug)  
+        list_to_copy = self.get_list_members(owner,slug)
         
         # Create copy using same name
         self.create_list(list_name,list_to_copy)
