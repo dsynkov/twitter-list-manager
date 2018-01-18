@@ -219,8 +219,12 @@ class TwitterListManager:
         if not all_are_ids:
             member_ids = []
             for member in source_of_members:
-                user = self.API.get_user(member)
-                member_ids.append(user.id)
+                try:
+                    user = self.API.get_user(member)
+                    member_ids.append(user.id)
+                except tweepy.error.TweepError:
+                    print("User {} not found. Double check screen_name or id to make sure it is valid.".format(member))
+                
         else:
             member_ids = source_of_members
         
@@ -264,7 +268,7 @@ class TwitterListManager:
                 except tweepy.TweepError as e:
                     members_not_added.append(member_id)
                     
-                    print("Could not add member {}... Resuming after 60 seconds...".format(member_id))
+                    print("Could not add member '{}'. Resuming after 60 seconds...".format(member_id))
                     
                     time.sleep(60)
 
