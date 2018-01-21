@@ -321,3 +321,18 @@ class TwitterListManager:
         else:
               
             print("You don't have any lists to delete.")
+            
+    def delete_all_tweets(self):
+    
+        status_counter = 0
+        
+        # Loop over tweets in user timeline; increment counter by one 
+        for status in tweepy.Cursor(self.API.user_timeline).items():
+            self.API.destroy_status(status.id)
+            status_counter += 1
+            
+        if status_counter > 0:
+        
+            print('Sucess! All {} of your statuses have been deleted.'.format(status_counter))
+        else:    
+            print('You have no tweets to delete.')
