@@ -1,10 +1,14 @@
-from datetime import datetime
+# Import dependencies
 import pandas as pd
+import pathlib
 import tweepy 
 import json
 import time
-import csv
 import os
+
+# Import custom modules
+from messages import Messages
+import utils
 
 auth_dict = {
     'CONSUMER_KEY': os.environ.get('CONSUMER_KEY'),
@@ -15,98 +19,78 @@ auth_dict = {
     'OWNER_ID': os.environ.get('OWNER_ID')
 }
 
-path_error_msg = "The argument 'members = ' must contain either a list object or an absolute path to a file containing the list of members."
 
 class TwitterListManager:
-    
+
     def __init__(self):
         
-        auth = tweepy.OAuthHandler(auth_dict['CONSUMER_KEY'],auth_dict['CONSUMER_SECRET'])
-        auth.set_access_token(auth_dict['ACCESS_TOKEN'],auth_dict['ACCESS_TOKEN_SECRET'])
+        auth = tweepy.OAuthHandler(auth_dict['CONSUMER_KEY'], auth_dict['CONSUMER_SECRET'])
+        auth.set_access_token(auth_dict['ACCESS_TOKEN'], auth_dict['ACCESS_TOKEN_SECRET'])
         
         self.OWNER = auth_dict['OWNER']
         self.OWNER_ID = auth_dict['OWNER_ID']
         
-        self.API = tweepy.API(auth,
-               wait_on_rate_limit=True)
-        
-    def get_timestamp(self):
-        
-        current_time = time.time()
-        current_timestamp = datetime.fromtimestamp(
-            current_time).strftime('%Y-%m-%d %H:%M:%S')
-        
-        return current_timestamp
+        self.API = tweepy.API(auth, wait_on_rate_limit=True)
+        self.path = pathlib.PurePath(os.getcwd())
+        self.msg = Messages()
     
-    def post_tweet(self,text):
+    def post_tweet(self, text):
 
         self.API.update_status(status=text)
         
-        ts = self.get_timestamp()
+        ts = utils.get_timestamp()
             
-        print("Success! Your tweet '{}' was posted on {}.".format(
-            text,ts))
-            
-    def export_list(self,slug,output_list):
-    
-        filename = os.getcwd() + '\\exports\\' + slug + '-list-members.csv'
-        with open(filename, 'w', newline='') as csvfile:
-            wr = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-            for item in output_list:
-                wr.writerow([item])
-                
-        return filename        
+        print(self.msg.success_post_tweet.format(text, ts))
 
-    def get_list_members(self,owner,slug,attr='screen_name',export=True):
+    def get_list_members(self, owner, slug, attr='screen_name', export=True):
     
         output_list = []
         
-        for member in tweepy.Cursor(self.API.list_members,owner,slug).items():
+        for member in tweepy.Cursor(self.API.list_members, owner, slug).items():
             if attr == 'id':
                 output_list.append(member.id)
             else:
                 output_list.append(member.screen_name)
                 
         if export:
-            self.export_list(slug,output_list)
+            utils.export_list(slug, output_list)
                 
-        print("Success! All {} member {}s have been collected from @{}'s list '{}'.".format(
-            len(output_list),attr,owner,slug)) # To do: hide if used w/i function
+        print(self.msg.success_get_list_members.format(
+            len(output_list), attr, owner, slug))  # To do: hide if used w/i function
         
         return output_list
 
-    def get_list_member_data(self,owner,slug,export=False):
+    def get_list_member_data(self, owner, slug, export=False):
         member_df = pd.DataFrame()
-        for member in tweepy.Cursor(self.API.list_members,owner,slug).items():
+        for member in tweepy.Cursor(self.API.list_members, owner, slug).items():
             # Create json string from User object
             member_json_str = json.dumps(member._json)
             # Read json into line as pandas df
-            member_df_row = pd.read_json(member_json_str,lines=True)
+            member_df_row = pd.read_json(member_json_str, lines=True)
             # Append each line into member_df
             member_df = member_df.append(member_df_row)
             # to do: write output to csv instead of a df
         if export:
-            filepath = os.getcwd() + '\\exports\\'
-            filename = slug + '-list-data.csv'
-            member_df.to_csv(filepath + filename)
+            file_path = self.path / 'exports' / slug + '-list-data.csv'
+            member_df.to_csv(str(file_path))
             
-        print("Success! Data for {}'s list '{}' has been retrived.".format(
-            owner,slug))
+        print(self.msg.success_get_list_member_data.format(
+            owner, slug))
             
         return member_df
 
-    def get_owner_lists(self,owner):
+    def get_owner_lists(self, owner):
         list_result_set = self.API.lists_all(owner)
         list_names = []
         for item in list_result_set:
             list_names.append(item.name)
             
-        print("Success! All {} lists have been retrived from {}.".format(
-           len(list_names),owner))
+        print(self.msg.success_get_owner_lists.format(
+           len(list_names), owner))
         
         return list_names
 
-    def get_owner_list_data(self,owner,export=False):
+    def get_owner_list_data(self, owner, export=False):
         list_result_set = self.API.lists_all(owner)
         
         # Create fields
@@ -116,8 +100,6 @@ class TwitterListManager:
         subscriber_count = []
         members_count = []
         created_at = []
-        
-        # To do: write to csv instead of a df
         
         for item in list_result_set:
             list_names.append(item.name)
@@ -136,12 +118,11 @@ class TwitterListManager:
         })    
         
         if export:
-            filepath = os.getcwd() + '\\exports\\'
-            filename = owner + '-data.csv'
-            list_df.to_csv(filepath + filename)
+            file_path = self.path / 'exports' / owner + '-data.csv'
+            list_df.to_csv(str(file_path))
             
-        print("Success! Data for all {} of {}'s lists has been retrived.".format(
-            len(list_names),owner))
+        print(self.msg.success_get_owner_list_data.format(
+            len(list_names), owner))
         
         return list_df
 
@@ -155,14 +136,14 @@ class TwitterListManager:
             list_names.append(item.name)
         
         if len(list_names) > 0:
-            print("Success! All {} of your lists have been retrieved.".format(
+            print(self.msg.success_get_my_lists.format(
                 len(list_names)))
             
             return list_names
             
-        print("You have no lists to retrieve...")
+        print(self.msg.error_get_my_lists)
 
-    def get_my_list_data(self,export=False):
+    def get_my_list_data(self, export=False):
               
         list_result_set = self.API.lists_all(self.OWNER)
         
@@ -199,22 +180,16 @@ class TwitterListManager:
         
         if not list_df.empty:
         
-            print("Success! Data for all {} of your lists has been retrieved.".format(
+            print(self.msg.error_get_my_list_data.format(
                 len(list_names)))
             
             return list_df
         
-        print("You have no list data to retrive...")
-    
-    def members_have_ids(self,source_of_members):
-        
-        all_are_ids = all(isinstance(member,int) for member in source_of_members)
-        
-        return all_are_ids
+        print(self.msg.error_get_my_list_data)
 
-    def get_ids_from_names(self,source_of_members):
+    def get_ids_from_names(self, source_of_members):
         
-        all_are_ids = self.members_have_ids(source_of_members)
+        all_are_ids = utils.members_have_ids(source_of_members)
         
         if not all_are_ids:
             member_ids = []
@@ -223,14 +198,14 @@ class TwitterListManager:
                     user = self.API.get_user(member)
                     member_ids.append(user.id)
                 except tweepy.error.TweepError:
-                    print("User {} not found. Double check screen_name or id to make sure it is valid.".format(member))
+                    print(self.msg.error_get_ids_from_names.format(member))
                 
         else:
             member_ids = source_of_members
         
         return member_ids
         
-    def create_list(self,name,members):
+    def create_list(self, name, members):
 
         # To do: add error handling
         # for non-existent handles/ids
@@ -241,16 +216,16 @@ class TwitterListManager:
             # In case members are in Excel file...
             if file_ext == '.xlsx' or file_ext == '.xls':
                 # Read in first df col & convert to list
-                df = pd.read_excel(members,cols='A',header=None)
-                members = df.iloc[:,0].tolist()
+                df = pd.read_excel(members, cols='A', header=None)
+                members = df.iloc[:, 0].tolist()
             else:
                 # Use this to read in .csv or .txt
-                members_file = open(members,'r')
+                members_file = open(members, 'r')
                 members = members_file.read().splitlines()
                 members = [member.strip('"') for member in members]
                 members_file.close()
                 
-        if isinstance(members,list):
+        if isinstance(members, list):
             # Get ids if list items are str
             member_ids = self.get_ids_from_names(members)
             
@@ -263,12 +238,13 @@ class TwitterListManager:
             
             for member_id in member_ids:
                 try:
-                    self.API.add_list_member(user_id = member_id, slug= new_slug, 
-                                    owner_screen_name = self.OWNER)      
-                except tweepy.TweepError as e:
+                    self.API.add_list_member(user_id=member_id, slug=new_slug,
+                                             owner_screen_name=self.OWNER)
+
+                except tweepy.TweepError:
                     members_not_added.append(member_id)
                     
-                    print("Could not add member '{}'. Resuming after 60 seconds...".format(member_id))
+                    print(self.msg.error_create_list.format(member_id))
                     
                     time.sleep(60)
 
@@ -277,33 +253,33 @@ class TwitterListManager:
                 time.sleep(1)
                     
         else:
-            raise TypeError(path_error_msg)
+            raise TypeError(self.msg.error_create_list_path)
         
-        ts = self.get_timestamp()
+        ts = utils.get_timestamp()
         
-        print("List '{}' created on {} with {} members.".format(
-            name,ts,(len(member_ids)-len(members_not_added)))) # To do: hide if used w/i function 
+        print(self.msg.success_create_list.format(
+            name, ts, (len(member_ids)-len(members_not_added))))  # To do: hide if used w/i function
 
-    def copy_list(self,owner,slug):
+    def copy_list(self, owner, slug):
     
         # To do: error handling for rate limits for large lists
     
         # Get the actual list object
-        list_source = self.API.get_list(owner_screen_name=owner,slug=slug)
+        list_source = self.API.get_list(owner_screen_name=owner, slug=slug)
         
         # Get the list name to copy 
         list_name = list_source.name
         
         # Get members from the list
-        list_to_copy = self.get_list_members(owner,slug)
+        list_to_copy = self.get_list_members(owner, slug)
         
         # Create copy using same name
-        self.create_list(list_name,list_to_copy)
+        self.create_list(list_name, list_to_copy)
         
-        ts = self.get_timestamp()
+        ts = utils.get_timestamp()
         
-        print("List '{}' with slug '{}' copied from @{} on {}.".format(
-            list_name,slug,owner,ts))
+        print(self.msg.success_copy_list.format(
+            list_name, slug, owner, ts))
 
     def delete_all_lists(self):
     
@@ -314,25 +290,25 @@ class TwitterListManager:
             for item in list_result_set:
                 list_slugs.append(item.slug)
             for slug in list_slugs:
-                self.API.destroy_list(owner_screen_name=self.OWNER,slug=slug)
+                self.API.destroy_list(owner_screen_name=self.OWNER, slug=slug)
                 
-            print("All {} of your lists have been deleted.".format(len(list_slugs)))
+            print(self.msg.success_delete_all_lists.format(len(list_slugs)))
             
         else:
               
-            print("You don't have any lists to delete.")
+            print(self.msg.error_delete_all_lists)
             
     def delete_all_tweets(self):
     
         status_counter = 0
         
-        # Loop over tweets in user timeline; increment counter by one 
+        # Loop over tweets in user time-line; increment counter by one
         for status in tweepy.Cursor(self.API.user_timeline).items():
             self.API.destroy_status(status.id)
             status_counter += 1
             
         if status_counter > 0:
         
-            print('Sucess! All {} of your statuses have been deleted.'.format(status_counter))
+            print(self.msg.success_delete_all_tweets.format(status_counter))
         else:    
-            print('You have no tweets to delete.')
+            print(self.msg.error_delete_all_tweets)
