@@ -19,6 +19,7 @@ class Messages:
         self.error_get_my_list_data = "You have no list data to retrieve..."
         self.error_get_ids_from_names = "User {} not found. Double check screen_name or id to make sure it is valid."
         self.error_create_list = "Could not add member '{}'. Resuming after 60 seconds..."
-        self.error_create_list_path = "The argument 'members = ' must contain either a list object or an absolute path to a file containing the list of members."
+        self.error_create_list_path = ("The argument 'members = ' must contain either a list object or an absolute path"
+                                       "to a file containing the list of members.")
         self.error_delete_all_lists = "You don't have any lists to delete."
         self.error_delete_all_tweets = 'You have no tweets to delete.'
