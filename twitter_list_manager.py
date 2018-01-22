@@ -69,9 +69,9 @@ class TwitterListManager:
             member_df_row = pd.read_json(member_json_str, lines=True)
             # Append each line into member_df
             member_df = member_df.append(member_df_row)
-            # to do: write output to csv instead of a df
+            # To do: write output to csv instead of a df
         if export:
-            file_path = self.path / 'exports' / slug + '-list-data.csv'
+            file_path = self.path / 'exports' / (slug + '-list-data.csv')
             member_df.to_csv(str(file_path))
             
         print(self.msg.success_get_list_member_data.format(
@@ -118,7 +118,7 @@ class TwitterListManager:
         })    
         
         if export:
-            file_path = self.path / 'exports' / owner + '-data.csv'
+            file_path = self.path / 'exports' / (owner + '-data.csv')
             list_df.to_csv(str(file_path))
             
         print(self.msg.success_get_owner_list_data.format(
@@ -174,13 +174,12 @@ class TwitterListManager:
         })    
         
         if export:
-            filepath = os.getcwd() + '\\exports\\'
-            filename = self.OWNER + '-list-data.csv'
-            list_df.to_csv(filepath + filename)
+            file_path = self.path / 'exports' / (self.OWNER + '-list-data.csv')
+            list_df.to_csv(str(file_path))
         
         if not list_df.empty:
         
-            print(self.msg.error_get_my_list_data.format(
+            print(self.msg.success_get_my_list_data.format(
                 len(list_names)))
             
             return list_df

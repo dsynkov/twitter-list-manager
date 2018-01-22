@@ -15,7 +15,7 @@ def get_timestamp():
 
 def export_list(slug, output_list):
     path = pathlib.PurePath(os.getcwd())
-    file_path = path / 'exports' / slug + '-list-members.csv'
+    file_path = path / 'exports' / (slug + '-list-members.csv')
 
     with open(str(file_path), 'w', newline='') as csv_file:
         wr = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
