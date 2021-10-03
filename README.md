@@ -35,7 +35,7 @@ To check these are being picked up by Python run the below commands in your Pyth
 ```python
 import os
 
-print(os.environ.get('CONSUMER KEY'))
+print(os.environ.get('CONSUMER_KEY'))
 ```
 
 ***(For Windows users, look up how to replicate the above steps using `setx` instead of `export` and a `.bat` instead of a `.sh` file. Or, just get the Bash emulator that comes with the installation of [Git for Windows](https://git-for-windows.github.io/).)***
